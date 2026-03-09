@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <title>Quiz | Combien de mandats perdez-vous chaque mois ?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+    input[type=range] { -webkit-appearance: none; appearance: none; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #E8533F; border: 3px solid white;
+      box-shadow: 0 2px 10px rgba(232,83,63,0.35); cursor: pointer;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #E8533F; border: 3px solid white;
+      box-shadow: 0 2px 10px rgba(232,83,63,0.35); cursor: pointer;
+    }
+    input[type=range]:focus { outline: none; }
+    button { font-family: 'DM Sans', sans-serif; }
+    button:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const CORAL = "#E8533F";
+    const DARK = "#1B2A4A";
+    const LIGHT = "#F8F9FB";
+    const GREEN = "#16A34A";
+    const ORANGE = "#EA580C";
+    const RED = "#DC2626";
+    const GRAY = "#6B7280";
+
+    const questions = [
+      {
+        id: 1, icon: "\u{1F4E5}", theme: "Volume",
+        question: "Combien de nouveaux contacts (estimations, appels, sites, annonces, RS) g\u00e9rez-vous par mois ?",
+        type: "slider", min: 0, max: 200, step: 5, unit: "contacts / mois", defaultVal: 40,
+        labels: ["0", "50", "100", "150", "200"],
+      },
+      {
+        id: 2, icon: "\u23F1\uFE0F", theme: "R\u00e9activit\u00e9",
+        question: "En moyenne, dans combien de temps rappelez-vous un nouveau lead ?",
+        type: "choice",
+        answers: [
+          { text: "Moins de 5 minutes", fuite: 0.05, color: GREEN },
+          { text: "5 \u00e0 30 minutes", fuite: 0.15, color: "#84CC16" },
+          { text: "2 \u00e0 5 heures", fuite: 0.45, color: ORANGE },
+          { text: "Plus de 24 heures", fuite: 0.70, color: RED },
+          { text: "\u00c7a d\u00e9pend des fois", fuite: 0.55, color: RED },
+        ],
+        insight: "78 % des mandats vont au premier agent qui r\u00e9pond. Apr\u00e8s 30 min, le lead a d\u00e9j\u00e0 contact\u00e9 un concurrent.",
+      },
+      {
+        id: 3, icon: "\uD83D\uDD01", theme: "Relances",
+        question: "Quand un lead ne r\u00e9pond pas, combien de fois le relancez-vous ?",
+        type: "choice",
+        answers: [
+          { text: "5 fois ou plus (email, tel, SMS)", fuite: 0.05, color: GREEN },
+          { text: "3 \u00e0 4 fois", fuite: 0.20, color: "#84CC16" },
+          { text: "1 \u00e0 2 fois", fuite: 0.45, color: ORANGE },
+          { text: "On ne relance pas vraiment", fuite: 0.70, color: RED },
+        ],
+        insight: "80 % des ventes se concluent entre la 5\u00e8me et la 12\u00e8me relance.",
+      },
+      {
+        id: 4, icon: "\uD83E\uDD16", theme: "Nurturing",
+        question: "Avez-vous un syst\u00e8me automatique pour maintenir le contact avec les prospects qui disent \u00ab pas maintenant \u00bb ?",
+        type: "choice",
+        answers: [
+          { text: "Oui, s\u00e9quence automatis\u00e9e (email + SMS)", fuite: 0.05, color: GREEN },
+          { text: "Oui, relances manuelles de temps en temps", fuite: 0.30, color: ORANGE },
+          { text: "Non, on les recontacte quand on y pense", fuite: 0.55, color: RED },
+          { text: "Non, aucun suivi", fuite: 0.75, color: RED },
+        ],
+        insight: "63 % des prospects qui disent \u00ab pas maintenant \u00bb ach\u00e8teront dans les 12 mois.",
+      },
+      {
+        id: 5, icon: "\uD83D\uDCCB", theme: "Base CRM",
+        question: "Combien de contacts avez-vous au total dans votre CRM ?",
+        type: "slider", min: 0, max: 2000, step: 50, unit: "contacts", defaultVal: 500,
+        labels: ["0", "500", "1 000", "1 500", "2 000"],
+      },
+      {
+        id: 6, icon: "\uD83D\uDCA4", theme: "Contacts dormants",
+        question: "Quand avez-vous contact\u00e9 pour la derni\u00e8re fois vos contacts de plus de 6 mois ?",
+        type: "choice",
+        answers: [
+          { text: "Ce mois-ci (campagne r\u00e9cente)", fuite: 0.10, color: GREEN },
+          { text: "Il y a 3 \u00e0 6 mois", fuite: 0.40, color: ORANGE },
+          { text: "Il y a plus d'un an", fuite: 0.70, color: RED },
+          { text: "Jamais / aucune id\u00e9e", fuite: 0.90, color: RED },
+        ],
+        insight: "18 % des contacts dormants peuvent \u00eatre r\u00e9activ\u00e9s avec un syst\u00e8me automatis\u00e9.",
+      },
+      {
+        id: 7, icon: "\uD83D\uDCB0", theme: "Honoraires",
+        question: "Quel est votre honoraire moyen par transaction ?",
+        type: "slider", min: 2000, max: 50000, step: 500, unit: "\u20ac / transaction", defaultVal: 8000,
+        labels: ["2K\u20ac", "15K\u20ac", "25K\u20ac", "38K\u20ac", "50K\u20ac"],
+        isCurrency: true,
+      },
+      {
+        id: 8, icon: "\u270D\uFE0F", theme: "Performance",
+        question: "Combien de mandats signez-vous par mois en moyenne ?",
+        type: "slider", min: 0, max: 30, step: 1, unit: "mandats / mois", defaultVal: 4,
+        labels: ["0", "8", "15", "22", "30"],
+      },
+    ];
+
+    // ── Slider ──
+    function SliderInput({ min, max, step, value, onChange, labels, isCurrency, unit }) {
+      const pct = ((value - min) / (max - min)) * 100;
+      const fmt = (v) => {
+        if (isCurrency) return v >= 1000 ? (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1).replace(".", ",") + "K\u20ac" : v + "\u20ac";
+        return v.toLocaleString("fr-FR");
+      };
+      return (
+        <div style={{ padding: "16px 0 8px" }}>
+          <div style={{ textAlign: "center", marginBottom: 18, fontSize: 34, fontWeight: 800, color: DARK }}>
+            {fmt(value)}
+            <span style={{ fontSize: 13, fontWeight: 500, color: GRAY, marginLeft: 8 }}>{unit}</span>
+          </div>
+          <input type="range" min={min} max={max} step={step} value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            style={{
+              width: "100%", height: 8, borderRadius: 99, outline: "none", cursor: "pointer",
+              background: "linear-gradient(to right, " + CORAL + " 0%, " + CORAL + " " + pct + "%, #E5E7EB " + pct + "%, #E5E7EB 100%)",
+            }}
+          />
+          {labels && (
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+              {labels.map((l, i) => <span key={i} style={{ fontSize: 11, color: "#9CA3AF" }}>{l}</span>)}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Animated Number ──
+    function Anim({ value, suffix, color, size }) {
+      const [d, setD] = useState(0);
+      useEffect(() => {
+        const dur = 1800, t0 = Date.now();
+        const tick = () => {
+          const p = Math.min((Date.now() - t0) / dur, 1);
+          setD(Math.round((1 - Math.pow(1 - p, 3)) * value));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }, [value]);
+      return (
+        <span style={{ fontSize: size || 32, fontWeight: 800, color: color || RED }}>
+          {d.toLocaleString("fr-FR")}{suffix || ""}
+        </span>
+      );
+    }
+
+    // ── Gauge ──
+    function Gauge({ score, color }) {
+      const r = 65, sw = 10, c = 2 * Math.PI * r;
+      const [off, setOff] = useState(c);
+      useEffect(() => { setTimeout(() => setOff(c - (Math.min(score, 100) / 100) * c), 300); }, [score, c]);
+      return (
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={sw} />
+          <circle cx="80" cy="80" r={r} fill="none" stroke={color} strokeWidth={sw + 2}
+            strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round"
+            transform="rotate(-90 80 80)"
+            style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)" }} />
+          <text x="80" y="72" textAnchor="middle" style={{ fontSize: 34, fontWeight: 800, fill: "#FFFFFF" }}>{score}</text>
+          <text x="80" y="96" textAnchor="middle" style={{ fontSize: 13, fill: "rgba(255,255,255,0.6)" }}>/ 100</text>
+        </svg>
+      );
+    }
+
+    // ── Bar ──
+    function Bar({ label, pct, color }) {
+      const [w, setW] = useState(0);
+      useEffect(() => { setTimeout(() => setW(pct), 400); }, [pct]);
+      return (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: GRAY, marginBottom: 4 }}>
+            <span>{label}</span>
+            <span style={{ fontWeight: 700, color }}>{pct} %</span>
+          </div>
+          <div style={{ height: 8, background: "#E5E7EB", borderRadius: 99 }}>
+            <div style={{ height: 8, borderRadius: 99, background: color, width: w + "%", transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // MAIN QUIZ
+    // ═══════════════════════════════════════════════════════
+    function Quiz() {
+      const [stage, setStage] = useState("intro");
+      const [cur, setCur] = useState(0);
+      const [data, setData] = useState({});
+      const [sel, setSel] = useState(null);
+      const [sv, setSv] = useState(null);
+      const [fade, setFade] = useState(true);
+      const topRef = useRef(null);
+
+      const q = questions[cur] || questions[0];
+
+      useEffect(() => {
+        if (stage === "quiz" && q.type === "slider") setSv(q.defaultVal);
+      }, [cur, stage]);
+
+      const next = () => {
+        const ok = q.type === "slider" ? sv !== null : sel !== null;
+        if (!ok) return;
+        const nd = Object.assign({}, data);
+        if (q.type === "slider") nd[q.id] = { value: sv };
+        else nd[q.id] = Object.assign({ value: sel }, q.answers[sel]);
+        setData(nd); setSel(null); setSv(null); setFade(false);
+        setTimeout(() => {
+          if (cur < questions.length - 1) setCur(cur + 1);
+          else setStage("result");
+          setFade(true);
+          if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth" });
+        }, 250);
+      };
+
+      // ── CALCUL ──
+      const calc = () => {
+        const leads = (data[1] && data[1].value) || 40;
+        const fReact = (data[2] && data[2].fuite) || 0.45;
+        const fRelance = (data[3] && data[3].fuite) || 0.45;
+        const fNurture = (data[4] && data[4].fuite) || 0.55;
+        const crm = (data[5] && data[5].value) || 500;
+        const fCRM = (data[6] && data[6].fuite) || 0.70;
+        const honoraire = (data[7] && data[7].value) || 8000;
+        const mandats = (data[8] && data[8].value) || 4;
+
+        const scoreFuite = Math.min(100, Math.round(
+          fReact * 30 + fRelance * 25 + fNurture * 20 + fCRM * 25
+        ));
+
+        const fuiteRatio = scoreFuite / 100;
+        const mandatsPerdus = fuiteRatio >= 0.95
+          ? mandats * 19
+          : Math.round(mandats * (fuiteRatio / (1 - fuiteRatio)) * 10) / 10;
+
+        const caPerduMois = Math.round(mandatsPerdus * honoraire);
+        const caPerduAn = caPerduMois * 12;
+
+        return { leads, crm, honoraire, mandats, fReact, fRelance, fNurture, fCRM, scoreFuite, mandatsPerdus, caPerduMois, caPerduAn };
+      };
+
+      const getLevel = (s) => {
+        if (s <= 25) return { label: "Syst\u00e8me efficace", emoji: "\u2705", color: GREEN, gaugeColor: "#4ADE80", bg: "#F0FDF4", border: "#BBF7D0" };
+        if (s <= 50) return { label: "Pertes invisibles", emoji: "\u26A0\uFE0F", color: ORANGE, gaugeColor: "#FB923C", bg: "#FFF7ED", border: "#FED7AA" };
+        if (s <= 75) return { label: "Fuite importante", emoji: "\uD83D\uDEA8", color: "#E85C3F", gaugeColor: "#FB923C", bg: "#FFF1F0", border: "#FDBA74" };
+        return { label: "Fuite critique", emoji: "\uD83D\uDD34", color: RED, gaugeColor: "#F87171", bg: "#FEF2F2", border: "#FECACA" };
+      };
+
+      const bx = { minHeight: "100vh", background: "linear-gradient(160deg," + LIGHT + " 0%,#EAECF2 100%)", display: "flex", justifyContent: "center", padding: 16 };
+      const cd = { background: "#fff", borderRadius: 20, boxShadow: "0 4px 28px rgba(27,42,74,0.07)", maxWidth: 460, width: "100%", overflow: "hidden", alignSelf: "flex-start" };
+
+      // ═══ INTRO ═══
+      if (stage === "intro") return (
+        <div style={bx}>
+          <div style={cd}>
+            <div style={{ background: "linear-gradient(145deg," + DARK + " 0%,#283D6A 100%)", padding: "40px 28px 32px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, letterSpacing: 4, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 20, fontWeight: 600 }}>Mentoria TechLabs</div>
+              <div style={{ fontSize: 44, marginBottom: 14 }}>{"\uD83D\uDD0D"}</div>
+              <h1 style={{ color: "#fff", fontSize: 23, fontWeight: 800, lineHeight: 1.3, margin: "0 0 14px" }}>
+                Combien de mandats<br />perdez-vous chaque mois<br /><span style={{ color: CORAL }}>sans le savoir ?</span>
+              </h1>
+              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, margin: 0, lineHeight: 1.5 }}>8 questions &middot; 3 min &middot; R&eacute;sultat chiffr&eacute; personnalis&eacute;</p>
+            </div>
+            <div style={{ padding: 28 }}>
+              <div style={{ background: "#FEF2F0", borderRadius: 14, padding: "18px 20px", marginBottom: 24 }}>
+                <p style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: DARK }}>&Agrave; la fin, vous d&eacute;couvrirez :</p>
+                {["Le nombre exact de mandats qui vous \u00e9chappent", "Le chiffre d'affaires que \u00e7a repr\u00e9sente chaque mois", "D'o\u00f9 viennent pr\u00e9cis\u00e9ment vos fuites"].map((t, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
+                    <span style={{ background: CORAL, color: "#fff", borderRadius: 99, minWidth: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>{i + 1}</span>
+                    <span style={{ fontSize: 13, color: "#444", lineHeight: 1.4 }}>{t}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setStage("quiz")}
+                style={{ width: "100%", padding: 16, background: CORAL, color: "#fff", border: "none", borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(232,83,63,0.27)" }}>
+                Commencer le diagnostic &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+
+      // ═══ QUIZ ═══
+      if (stage === "quiz") {
+        const prog = (cur / questions.length) * 100;
+        const ok = q.type === "slider" ? sv !== null : sel !== null;
+        return (
+          <div style={bx} ref={topRef}>
+            <div style={cd}>
+              <div style={{ height: 5, background: "#E5E7EB" }}>
+                <div style={{ height: 5, background: CORAL, width: prog + "%", transition: "width 0.5s ease", borderRadius: "0 3px 3px 0" }} />
+              </div>
+              <div style={{ padding: "24px 28px", opacity: fade ? 1 : 0, transition: "opacity 0.25s ease" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>{cur + 1} / {questions.length}</span>
+                  <span style={{ background: DARK + "0A", color: DARK, fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 99 }}>{q.icon} {q.theme}</span>
+                </div>
+                <h2 style={{ fontSize: 17, fontWeight: 700, color: DARK, lineHeight: 1.45, margin: "0 0 24px" }}>{q.question}</h2>
+
+                {q.type === "slider" && <SliderInput min={q.min} max={q.max} step={q.step} value={sv !== null ? sv : q.defaultVal} onChange={setSv} labels={q.labels} isCurrency={q.isCurrency} unit={q.unit} />}
+
+                {q.type === "choice" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 8 }}>
+                    {q.answers.map((a, i) => {
+                      const on = sel === i;
+                      return (
+                        <button key={i} onClick={() => setSel(i)}
+                          style={{
+                            padding: "14px 16px", background: on ? a.color + "0F" : "#fff",
+                            border: "2px solid " + (on ? a.color : "#E5E7EB"), borderRadius: 12,
+                            cursor: "pointer", textAlign: "left", fontSize: 14,
+                            fontWeight: on ? 600 : 400, color: on ? a.color : "#374151",
+                            transition: "all 0.2s", display: "flex", alignItems: "center", gap: 12,
+                          }}>
+                          <span style={{
+                            width: 26, height: 26, borderRadius: 99, flexShrink: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            background: on ? a.color : "#F3F4F6", color: on ? "#fff" : "#9CA3AF",
+                            fontSize: 12, fontWeight: 700, transition: "all 0.2s",
+                          }}>{String.fromCharCode(65 + i)}</span>
+                          {a.text}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {q.insight && (
+                  <div style={{ background: "#F8F9FB", borderRadius: 10, padding: "12px 16px", margin: "16px 0", borderLeft: "3px solid " + CORAL + "33" }}>
+                    <p style={{ margin: 0, fontSize: 12, color: GRAY, lineHeight: 1.5 }}>{"\uD83D\uDCA1"} {q.insight}</p>
+                  </div>
+                )}
+
+                <button onClick={next} disabled={!ok}
+                  style={{
+                    width: "100%", padding: 14, border: "none", borderRadius: 12, marginTop: 8,
+                    fontSize: 15, fontWeight: 700, cursor: ok ? "pointer" : "default",
+                    background: ok ? CORAL : "#D1D5DB", color: ok ? "#fff" : "#9CA3AF",
+                    transition: "all 0.2s", boxShadow: ok ? "0 4px 14px rgba(232,83,63,0.27)" : "none",
+                  }}>
+                  {cur < questions.length - 1 ? "Suivant \u2192" : "D\u00e9couvrir mes r\u00e9sultats \u2192"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ═══ RESULTS ═══
+      const r = calc();
+      const lv = getLevel(r.scoreFuite);
+
+      return (
+        <div style={bx} ref={topRef}>
+          <div style={cd}>
+            {/* Header */}
+            <div style={{ background: "linear-gradient(145deg," + DARK + " 0%,#283D6A 100%)", padding: "28px 28px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, letterSpacing: 3, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", fontWeight: 600, marginBottom: 10 }}>
+                Score de Fuite de Mandats
+              </div>
+              <Gauge score={r.scoreFuite} color={lv.gaugeColor} />
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "rgba(255,255,255,0.1)", borderRadius: 99, padding: "6px 16px", marginTop: 4,
+              }}>
+                <span style={{ fontSize: 18 }}>{lv.emoji}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: lv.gaugeColor }}>{lv.label.toUpperCase()}</span>
+              </div>
+            </div>
+
+            <div style={{ padding: "24px 24px 28px" }}>
+
+              {/* R\u00c9PONSE PRINCIPALE */}
+              <div style={{
+                background: "#FEF2F2", borderRadius: 18, padding: "28px 20px", textAlign: "center",
+                border: "1.5px solid #FECACA", marginBottom: 20,
+              }}>
+                <div style={{ fontSize: 13, color: GRAY, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 16 }}>
+                  Vous perdez chaque mois environ
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <Anim value={Math.round(r.mandatsPerdus * 10) / 10} suffix="" color={RED} size={52} />
+                  <div style={{ fontSize: 16, fontWeight: 700, color: DARK, marginTop: 4 }}>
+                    {r.mandatsPerdus <= 1 ? "mandat" : "mandats"} perdus / mois
+                  </div>
+                </div>
+
+                {/* Calcul visible */}
+                <div style={{
+                  background: "rgba(255,255,255,0.7)", borderRadius: 12, padding: "14px 16px",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap",
+                  marginBottom: 16,
+                }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: DARK }}>
+                    {(Math.round(r.mandatsPerdus * 10) / 10).toLocaleString("fr-FR")} mandats
+                  </span>
+                  <span style={{ fontSize: 18, color: GRAY }}>&times;</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: DARK }}>
+                    {r.honoraire.toLocaleString("fr-FR")} &euro;
+                  </span>
+                  <span style={{ fontSize: 18, color: GRAY }}>=</span>
+                </div>
+
+                <div>
+                  <Anim value={r.caPerduMois} suffix=" &euro; / mois" color={RED} size={28} />
+                </div>
+                <div style={{ marginTop: 10 }}>
+                  <span style={{ fontSize: 14, color: GRAY }}>soit </span>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: RED }}>{r.caPerduAn.toLocaleString("fr-FR")} &euro; / an</span>
+                </div>
+              </div>
+
+              {/* Compar. */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                <div style={{ background: "#F0FDF4", borderRadius: 14, padding: "18px 12px", textAlign: "center" }}>
+                  <div style={{ fontSize: 30, fontWeight: 800, color: GREEN }}>{r.mandats}</div>
+                  <div style={{ fontSize: 12, color: GRAY, marginTop: 4, lineHeight: 1.3 }}>mandats<br />sign&eacute;s / mois</div>
+                </div>
+                <div style={{ background: "#FEF2F2", borderRadius: 14, padding: "18px 12px", textAlign: "center" }}>
+                  <div style={{ fontSize: 30, fontWeight: 800, color: RED }}>~{Math.round(r.mandatsPerdus * 10) / 10}</div>
+                  <div style={{ fontSize: 12, color: GRAY, marginTop: 4, lineHeight: 1.3 }}>mandats<br />perdus / mois</div>
+                </div>
+              </div>
+
+              {/* Fuites */}
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: DARK, margin: "0 0 14px" }}>
+                  D'o&ugrave; viennent vos fuites ?
+                </h3>
+                <Bar label={"\u23F1 R\u00e9activit\u00e9 (temps de rappel)"} pct={Math.round(r.fReact * 100)}
+                  color={r.fReact > 0.5 ? RED : r.fReact > 0.2 ? ORANGE : GREEN} />
+                <Bar label={"\uD83D\uDD01 Relances (suivi des leads)"} pct={Math.round(r.fRelance * 100)}
+                  color={r.fRelance > 0.4 ? RED : r.fRelance > 0.2 ? ORANGE : GREEN} />
+                <Bar label={"\uD83E\uDD16 Nurturing (\u00ab pas maintenant \u00bb)"} pct={Math.round(r.fNurture * 100)}
+                  color={r.fNurture > 0.5 ? RED : r.fNurture > 0.25 ? ORANGE : GREEN} />
+                <Bar label={"\uD83D\uDCA4 CRM dormant (contacts oubli\u00e9s)"} pct={Math.round(r.fCRM * 100)}
+                  color={r.fCRM > 0.6 ? RED : r.fCRM > 0.3 ? ORANGE : GREEN} />
+              </div>
+
+              {/* CTA */}
+              <div style={{
+                background: "linear-gradient(135deg, " + CORAL + "0A 0%, " + CORAL + "15 100%)",
+                border: "1.5px solid " + CORAL + "30", borderRadius: 14, padding: 20, textAlign: "center",
+              }}>
+                <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800, color: DARK, lineHeight: 1.4 }}>
+                  Ces mandats sont r&eacute;cup&eacute;rables.
+                </p>
+                <p style={{ margin: 0, fontSize: 13, color: GRAY, lineHeight: 1.5 }}>
+                  Restez jusqu'&agrave; la fin du webinaire :<br />je vous montre comment en r&eacute;cup&eacute;rer la majorit&eacute; en 30 jours.
+                </p>
+              </div>
+
+              {/* Restart */}
+              <button onClick={() => { setStage("intro"); setCur(0); setData({}); setSel(null); setSv(null); }}
+                style={{ width: "100%", padding: 12, background: "transparent", border: "1.5px solid #D1D5DB", borderRadius: 10, fontSize: 13, fontWeight: 600, color: GRAY, cursor: "pointer", marginTop: 18 }}>
+                &larr; Refaire le diagnostic
+              </button>
+              <div style={{ textAlign: "center", marginTop: 16 }}>
+                <span style={{ fontSize: 11, color: "#B0B5BF" }}>mentoria-groupe.com</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<Quiz />);
+  </script>
+</body>
+</html>
