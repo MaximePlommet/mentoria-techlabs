@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter à mon agenda</title>
+    <style>
+        :root {
+            --coral: #E8533F;
+            --dark: #1B2A4A;
+            --light: #F8F9FB;
+            --green: #16A34A;
+            --orange: #EA580C;
+            --red: #DC2626;
+            --gray: #6B7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--light);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--dark);
+            margin-bottom: 12px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .event-details {
+            background: white;
+            border-left: 4px solid var(--coral);
+            padding: 16px;
+            margin-bottom: 30px;
+            text-align: left;
+            border-radius: 4px;
+        }
+
+        .event-details p {
+            margin: 8px 0;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .event-details strong {
+            color: var(--dark);
+        }
+
+        .buttons-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-google {
+            background: white;
+            color: var(--dark);
+            border: 2px solid var(--coral);
+        }
+
+        .btn-google:hover {
+            background: var(--coral);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(232, 83, 63, 0.3);
+        }
+
+        .btn-outlook {
+            background: var(--coral);
+            color: white;
+            border: 2px solid var(--coral);
+        }
+
+        .btn-outlook:hover {
+            background: var(--orange);
+            border-color: var(--orange);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+        }
+
+        .btn-ics {
+            background: white;
+            color: var(--coral);
+            border: 2px solid var(--coral);
+        }
+
+        .btn-ics:hover {
+            background: var(--coral);
+            color: white;
+            border-color: var(--coral);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(232, 83, 63, 0.3);
+        }
+
+        .divider {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            display: block;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .copy-link {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .copy-link label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--dark);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .copy-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        .copy-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: white;
+            color: var(--dark);
+        }
+
+        .btn-copy {
+            padding: 10px 16px;
+            background: var(--coral);
+            color: white;
+            border: 1px solid var(--coral);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: var(--orange);
+            border-color: var(--orange);
+        }
+
+        .success-message {
+            display: none;
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--green);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+            border-left: 3px solid var(--green);
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 Ajouter à mon agenda</h1>
+        <p class="subtitle">Choisissez votre calendrier préféré</p>
+
+        <div class="event-details">
+            <p><strong>Événement :</strong> Atelier stratégique IA</p>
+            <p><strong>Date :</strong> <span id="eventDate">15 avril 2024</span></p>
+            <p><strong>Heure :</strong> <span id="eventTime">14:00 - 15:00</span></p>
+            <p><strong>Plateforme :</strong> Microsoft Teams</p>
+        </div>
+
+        <div class="buttons-group">
+            <a href="#" class="btn btn-google" id="btnGoogle">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6m-1.78-7.78l-4.24 4.24M7.46 16.54L3.22 20.78"></path>
+                </svg>
+                Google Calendar
+            </a>
+
+            <a href="#" class="btn btn-outlook" id="btnOutlook">
+                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+                </svg>
+                Outlook / Office 365
+            </a>
+
+            <a href="#" class="btn btn-ics" id="btnICS">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Télécharger (.ics)
+            </a>
+        </div>
+
+        <div class="copy-link">
+            <label>Copier le lien Teams :</label>
+            <div class="copy-container">
+                <input type="text" class="copy-input" id="teamsLink" readonly>
+                <button class="btn-copy" id="btnCopy">Copier</button>
+            </div>
+            <div class="success-message" id="successMessage">✓ Lien copié !</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration de l'événement
+        const EVENT_CONFIG = {
+            title: 'Atelier stratégique IA',
+            date: new Date('2026-04-07T10:00:00'),
+            duration: 60, // en minutes
+            teamsUrl: 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_ZGY1YTYwMmItYjBkYy00YjYyLWIzODQtYmRjYjhmM2RlMGNk%40thread.v2/0?context=%7B%22Tid%22%3A%228c245803-3740-4bd9-961d-e63794289391%22%2C%22Oid%22%3A%222b10c108-a8a4-455a-901f-c6a1bb7903f5%22%7D&pp=47lUNSWX2jbk',
+            timeZone: 'Europe/Paris'
+        };
+
+        // Formater les dates pour l'affichage
+        function formatDateDisplay(date) {
+            return date.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function formatTimeDisplay(date, duration) {
+            const startTime = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            const endDate = new Date(date.getTime() + duration * 60000);
+            const endTime = endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            return `${startTime} - ${endTime}`;
+        }
+
+        // Mettre à jour l'affichage de la date
+        document.getElementById('eventDate').textContent = formatDateDisplay(EVENT_CONFIG.date);
+        document.getElementById('eventTime').textContent = formatTimeDisplay(EVENT_CONFIG.date, EVENT_CONFIG.duration);
+        document.getElementById('teamsLink').value = EVENT_CONFIG.teamsUrl;
+
+        // Générer les URLs iCal
+        function getICalDates() {
+            const start = EVENT_CONFIG.date;
+            const end = new Date(start.getTime() + EVENT_CONFIG.duration * 60000);
+
+            const formatICalDate = (date) => {
+                return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            };
+
+            return {
+                start: formatICalDate(start),
+                end: formatICalDate(end)
+            };
+        }
+
+        // Google Calendar
+        document.getElementById('btnGoogle').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dates = getICalDates();
+            const url = new URL('https://calendar.google.com/calendar/render');
+            url.searchParams.append('action', 'TEMPLATE');
+            url.searchParams.append('text', EVENT_CONFIG.title);
+            url.searchParams.append('dates', `${dates.start}/${dates.end}`);
+            url.searchParams.append('details', `Rejoignez l\'atelier stratégique sur l\'IA`);
+            url.searchParams.append('location', EVENT_CONFIG.teamsUrl);
+            url.searchParams.append('ctz', EVENT_CONFIG.timeZone);
+            window.open(url.toString(), '_blank');
+        });
+
+        // Outlook
+        document.getElementById('btnOutlook').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dates = getICalDates();
+            const url = new URL('https://outlook.live.com/calendar/0/deeplink/compose');
+            url.searchParams.append('subject', EVENT_CONFIG.title);
+            url.searchParams.append('startdt', dates.start);
+            url.searchParams.append('enddt', dates.end);
+            url.searchParams.append('body', `Lien Teams: ${EVENT_CONFIG.teamsUrl}`);
+            url.searchParams.append('location', 'Microsoft Teams');
+            window.open(url.toString(), '_blank');
+        });
+
+        // Télécharger ICS
+        document.getElementById('btnICS').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dates = getICalDates();
+            const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Mon Entreprise//Atelier IA//FR
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-TIMEZONE:Europe/Paris
+BEGIN:VEVENT
+UID:atelier-ia-2024@monentreprise.com
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTSTART:${dates.start}
+DTEND:${dates.end}
+SUMMARY:${EVENT_CONFIG.title}
+DESCRIPTION:Rejoignez-nous pour cet atelier stratégique sur l'IA
+LOCATION:${EVENT_CONFIG.teamsUrl}
+END:VEVENT
+END:VCALENDAR`;
+
+            const blob = new Blob([icsContent], { type: 'text/calendar' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Atelier-IA.ics';
+            link.click();
+        });
+
+        // Copier le lien
+        document.getElementById('btnCopy').addEventListener('click', function() {
+            const input = document.getElementById('teamsLink');
+            input.select();
+            document.execCommand('copy');
+
+            const message = document.getElementById('successMessage');
+            message.classList.add('show');
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
